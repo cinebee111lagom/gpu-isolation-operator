@@ -1,0 +1,37 @@
+1. GPU Isolation Operator has been installed in namespace {{ include "gpu-isolation-operator.namespace" . }}.
+
+2. Verify the deployment:
+   kubectl get deploy,pods,svc -n {{ include "gpu-isolation-operator.namespace" . }}
+
+3. Verify webhooks:
+   kubectl get mutatingwebhookconfiguration {{ include "gpu-isolation-operator.mutatingWebhookName" . }}
+   kubectl get validatingwebhookconfiguration {{ include "gpu-isolation-operator.validatingWebhookName" . }}
+
+{{- if .Values.certManager.enabled }}
+
+4. Wait for cert-manager to issue the webhook certificate:
+   kubectl get certificate -n {{ include "gpu-isolation-operator.namespace" . }}
+   kubectl get secret {{ .Values.webhook.certSecretName }} -n {{ include "gpu-isolation-operator.namespace" . }}
+{{- else }}
+
+4. cert-manager is disabled. Ensure Secret {{ .Values.webhook.certSecretName }} exists and
+   set webhook.caBundle in values if CA injection is not handled externally.
+{{- end }}
+
+{{- if .Values.defaultPolicy.enabled }}
+
+5. Default GPUIsolationPolicy {{ .Values.defaultPolicy.name }} has been created.
+   kubectl get gpuisolationpolicies
+{{- else }}
+
+5. Create a GPUIsolationPolicy and label it active:
+   kubectl apply -f config/samples/platform_v1alpha1_gpuisolationpolicy.yaml
+{{- end }}
+
+6. Label GPU nodes:
+   kubectl label node <gpu-node> accelerator=nvidia-gpu
+
+7. Test a legal GPU Pod in an authorized namespace:
+   kubectl apply -f config/samples/pod_samples.yaml
+
+For more details see README.md in the project root.

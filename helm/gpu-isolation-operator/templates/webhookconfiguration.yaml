@@ -1,0 +1,77 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ include "gpu-isolation-operator.mutatingWebhookName" . }}
+  labels:
+    {{- include "gpu-isolation-operator.labels" . | nindent 4 }}
+  {{- if .Values.certManager.enabled }}
+  annotations:
+    cert-manager.io/inject-ca-from: {{ include "gpu-isolation-operator.certManagerInjectCAFrom" . }}
+  {{- end }}
+webhooks:
+  - name: mutate-pod-gpu-isolation.platform.example.com
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    failurePolicy: {{ .Values.webhook.failurePolicy }}
+    timeoutSeconds: {{ .Values.webhook.timeoutSeconds }}
+    clientConfig:
+      service:
+        name: {{ include "gpu-isolation-operator.webhookServiceName" . }}
+        namespace: {{ include "gpu-isolation-operator.namespace" . }}
+        path: {{ .Values.webhook.mutatingPath }}
+      {{- if and (not .Values.certManager.enabled) .Values.webhook.caBundle }}
+      caBundle: {{ .Values.webhook.caBundle | quote }}
+      {{- end }}
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["pods"]
+        scope: Namespaced
+    {{- with .Values.webhook.namespaceSelector }}
+    namespaceSelector:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.webhook.objectSelector }}
+    objectSelector:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: {{ include "gpu-isolation-operator.validatingWebhookName" . }}
+  labels:
+    {{- include "gpu-isolation-operator.labels" . | nindent 4 }}
+  {{- if .Values.certManager.enabled }}
+  annotations:
+    cert-manager.io/inject-ca-from: {{ include "gpu-isolation-operator.certManagerInjectCAFrom" . }}
+  {{- end }}
+webhooks:
+  - name: validate-pod-gpu-isolation.platform.example.com
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    failurePolicy: {{ .Values.webhook.failurePolicy }}
+    timeoutSeconds: {{ .Values.webhook.timeoutSeconds }}
+    clientConfig:
+      service:
+        name: {{ include "gpu-isolation-operator.webhookServiceName" . }}
+        namespace: {{ include "gpu-isolation-operator.namespace" . }}
+        path: {{ .Values.webhook.validatingPath }}
+      {{- if and (not .Values.certManager.enabled) .Values.webhook.caBundle }}
+      caBundle: {{ .Values.webhook.caBundle | quote }}
+      {{- end }}
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+        scope: Namespaced
+    {{- with .Values.webhook.namespaceSelector }}
+    namespaceSelector:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.webhook.objectSelector }}
+    objectSelector:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}

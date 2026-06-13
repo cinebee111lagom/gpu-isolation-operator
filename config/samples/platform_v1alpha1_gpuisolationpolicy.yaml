@@ -1,0 +1,43 @@
+apiVersion: platform.example.com/v1alpha1
+kind: GPUIsolationPolicy
+metadata:
+  name: default-gpu-policy
+  labels:
+    platform.example.com/active: "true"
+spec:
+  enforcementMode: Enforce
+  gpuResourceNames:
+    - nvidia.com/gpu
+  gpuNodeSelector:
+    accelerator: nvidia-gpu
+  gpuTaint:
+    key: dedicated
+    value: gpu
+    effect: NoSchedule
+  allowedNamespaces:
+    matchNames:
+      - ml-platform
+      - ai-training
+    matchLabels:
+      gpu-access: "true"
+  priorityClass:
+    name: gpu-high-priority
+    value: 100000
+    globalDefault: false
+    description: "Priority class for authorized GPU workloads"
+  quota:
+    defaultDenyGpu: true
+    allowedNamespaceGpuLimit: "8"
+  mutation:
+    injectToleration: true
+    injectNodeAffinity: true
+    injectPriorityClass: true
+  validation:
+    denyGpuInUnauthorizedNamespace: true
+    denyMissingPriorityClass: true
+    denyMissingToleration: true
+    denyMissingNodeAffinity: true
+    denyNodeNameBypass: true
+    denyHostNetworkBypass: true
+    denyUnauthorizedSchedulerName: true
+    denyIllegalGpuNodeAffinity: true

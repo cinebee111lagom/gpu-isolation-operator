@@ -1,0 +1,26 @@
+# Development / local cluster overrides.
+# Usage: helm install gpu-isolation ./helm/gpu-isolation-operator -f helm/gpu-isolation-operator/values-dev.yaml
+
+image:
+  repository: gpu-isolation-operator
+  tag: latest
+  pullPolicy: Never
+
+namespace:
+  create: true
+  name: gpu-isolation-system
+
+certManager:
+  enabled: true
+
+defaultPolicy:
+  enabled: true
+
+replicaCount: 1
+
+leaderElection:
+  enabled: false
+
+manager:
+  extraArgs:
+    - --zap-devel

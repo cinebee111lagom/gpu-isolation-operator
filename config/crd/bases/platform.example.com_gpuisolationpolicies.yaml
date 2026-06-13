@@ -1,0 +1,267 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.21.0
+  name: gpuisolationpolicies.platform.example.com
+spec:
+  group: platform.example.com
+  names:
+    kind: GPUIsolationPolicy
+    listKind: GPUIsolationPolicyList
+    plural: gpuisolationpolicies
+    shortNames:
+    - gpip
+    singular: gpuisolationpolicy
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.enforcementMode
+      name: Mode
+      type: string
+    - jsonPath: .status.ready
+      name: Ready
+      type: boolean
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: GPUIsolationPolicy is the Schema for the gpuisolationpolicies
+          API.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: GPUIsolationPolicySpec defines the desired GPU isolation
+              policy.
+            properties:
+              allowedNamespaces:
+                description: AllowedNamespaces defines which namespaces may request
+                  GPU resources.
+                properties:
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  matchNames:
+                    items:
+                      type: string
+                    type: array
+                type: object
+              enforcementMode:
+                default: Enforce
+                description: EnforcementMode controls webhook enforcement behavior.
+                enum:
+                - Enforce
+                - Audit
+                type: string
+              gpuNodeSelector:
+                additionalProperties:
+                  type: string
+                description: GPUNodeSelector selects GPU nodes for taint management
+                  and affinity injection.
+                type: object
+              gpuResourceNames:
+                description: GPUResourceNames lists extended resource names treated
+                  as GPU devices.
+                items:
+                  type: string
+                minItems: 1
+                type: array
+              gpuTaint:
+                description: GPUTaint is applied to nodes matching GPUNodeSelector.
+                properties:
+                  effect:
+                    type: string
+                  key:
+                    type: string
+                  value:
+                    type: string
+                required:
+                - effect
+                - key
+                - value
+                type: object
+              mutation:
+                description: Mutation controls automatic Pod field injection.
+                properties:
+                  injectNodeAffinity:
+                    type: boolean
+                  injectPriorityClass:
+                    type: boolean
+                  injectToleration:
+                    type: boolean
+                required:
+                - injectNodeAffinity
+                - injectPriorityClass
+                - injectToleration
+                type: object
+              priorityClass:
+                description: PriorityClass defines the GPU-dedicated PriorityClass
+                  managed by the operator.
+                properties:
+                  description:
+                    type: string
+                  globalDefault:
+                    type: boolean
+                  name:
+                    type: string
+                  value:
+                    format: int32
+                    type: integer
+                required:
+                - name
+                - value
+                type: object
+              quota:
+                description: Quota controls namespace-level GPU ResourceQuota behavior.
+                properties:
+                  allowedNamespaceGpuLimit:
+                    type: string
+                  defaultDenyGpu:
+                    type: boolean
+                  denyUnauthorizedNamespaces:
+                    type: boolean
+                required:
+                - defaultDenyGpu
+                type: object
+              validation:
+                description: Validation controls validating webhook checks.
+                properties:
+                  denyGpuInUnauthorizedNamespace:
+                    type: boolean
+                  denyHostNetworkBypass:
+                    type: boolean
+                  denyIllegalGpuNodeAffinity:
+                    type: boolean
+                  denyMissingNodeAffinity:
+                    type: boolean
+                  denyMissingPriorityClass:
+                    type: boolean
+                  denyMissingToleration:
+                    type: boolean
+                  denyNodeNameBypass:
+                    type: boolean
+                  denyUnauthorizedSchedulerName:
+                    type: boolean
+                required:
+                - denyGpuInUnauthorizedNamespace
+                - denyMissingNodeAffinity
+                - denyMissingPriorityClass
+                - denyMissingToleration
+                - denyNodeNameBypass
+                - denyUnauthorizedSchedulerName
+                type: object
+            required:
+            - allowedNamespaces
+            - gpuNodeSelector
+            - gpuResourceNames
+            - gpuTaint
+            - mutation
+            - priorityClass
+            - quota
+            - validation
+            type: object
+          status:
+            description: GPUIsolationPolicyStatus defines the observed state of GPUIsolationPolicy.
+            properties:
+              conditions:
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              lastReconcileTime:
+                format: date-time
+                type: string
+              managedGpuNodes:
+                items:
+                  type: string
+                type: array
+              managedNamespaces:
+                items:
+                  type: string
+                type: array
+              managedPriorityClass:
+                type: string
+              message:
+                type: string
+              observedGeneration:
+                format: int64
+                type: integer
+              ready:
+                type: boolean
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

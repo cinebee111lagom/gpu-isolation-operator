@@ -1,0 +1,21 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: gpu-isolation-selfsigned-issuer
+  namespace: gpu-isolation-system
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gpu-isolation-serving-cert
+  namespace: gpu-isolation-system
+spec:
+  dnsNames:
+    - gpu-isolation-webhook-service.gpu-isolation-system.svc
+    - gpu-isolation-webhook-service.gpu-isolation-system.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: gpu-isolation-selfsigned-issuer
+  secretName: gpu-isolation-webhook-server-cert

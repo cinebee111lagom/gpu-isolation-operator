@@ -1,0 +1,97 @@
+# Authorized GPU Pod — webhook will inject toleration, nodeAffinity, priorityClass.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: legal-gpu-pod
+  namespace: ml-platform
+spec:
+  containers:
+    - name: trainer
+      image: nvcr.io/nvidia/pytorch:24.01-py3
+      resources:
+        requests:
+          nvidia.com/gpu: "1"
+        limits:
+          nvidia.com/gpu: "1"
+
+---
+# Illegal GPU Pod in default namespace — should be rejected by validating webhook.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: illegal-gpu-pod
+  namespace: default
+spec:
+  priorityClassName: gpu-high-priority
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: gpu
+      effect: NoSchedule
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: accelerator
+                operator: In
+                values:
+                  - nvidia-gpu
+  containers:
+    - name: trainer
+      image: nvcr.io/nvidia/pytorch:24.01-py3
+      resources:
+        requests:
+          nvidia.com/gpu: "1"
+        limits:
+          nvidia.com/gpu: "1"
+
+---
+# Illegal GPU Pod — nodeName bypass attempt.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: illegal-gpu-nodename-bypass
+  namespace: ml-platform
+spec:
+  nodeName: gpu-node-1
+  priorityClassName: gpu-high-priority
+  tolerations:
+    - key: dedicated
+      operator: Equal
+      value: gpu
+      effect: NoSchedule
+  containers:
+    - name: trainer
+      image: nvcr.io/nvidia/pytorch:24.01-py3
+      resources:
+        requests:
+          nvidia.com/gpu: "1"
+        limits:
+          nvidia.com/gpu: "1"
+
+---
+# Namespace samples for local testing.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ml-platform
+  labels:
+    gpu-access: "true"
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-training
+  labels:
+    gpu-access: "true"
+
+---
+# Example GPU node label (apply to real nodes in your cluster).
+apiVersion: v1
+kind: Node
+metadata:
+  name: gpu-node-example
+  labels:
+    accelerator: nvidia-gpu

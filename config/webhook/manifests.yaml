@@ -1,0 +1,49 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: gpu-isolation-mutating-webhook
+  annotations:
+    cert-manager.io/inject-ca-from: gpu-isolation-system/gpu-isolation-serving-cert
+webhooks:
+  - name: mutate-pod-gpu-isolation.platform.example.com
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        name: gpu-isolation-webhook-service
+        namespace: gpu-isolation-system
+        path: /mutate-v1-pod-gpu-isolation
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE"]
+        resources: ["pods"]
+        scope: Namespaced
+    objectSelector: {}
+    namespaceSelector: {}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: gpu-isolation-validating-webhook
+  annotations:
+    cert-manager.io/inject-ca-from: gpu-isolation-system/gpu-isolation-serving-cert
+webhooks:
+  - name: validate-pod-gpu-isolation.platform.example.com
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
+    failurePolicy: Fail
+    clientConfig:
+      service:
+        name: gpu-isolation-webhook-service
+        namespace: gpu-isolation-system
+        path: /validate-v1-pod-gpu-isolation
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["pods"]
+        scope: Namespaced
+    objectSelector: {}
+    namespaceSelector: {}

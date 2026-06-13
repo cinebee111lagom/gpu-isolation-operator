@@ -1,0 +1,19 @@
+apiVersion: v2
+name: gpu-isolation-operator
+description: Kubernetes Operator for GPU resource isolation and admission control
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.28.0-0"
+keywords:
+  - kubernetes
+  - operator
+  - gpu
+  - admission-webhook
+  - nvidia
+home: https://github.com/operator/gpu-isolation-operator
+sources:
+  - https://github.com/operator/gpu-isolation-operator
+maintainers:
+  - name: Platform Engineering
+    email: platform@example.com

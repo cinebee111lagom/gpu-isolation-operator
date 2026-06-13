@@ -1,0 +1,13 @@
+{{- if .Values.defaultPolicy.enabled }}
+apiVersion: platform.example.com/v1alpha1
+kind: GPUIsolationPolicy
+metadata:
+  name: {{ .Values.defaultPolicy.name }}
+  labels:
+    {{- include "gpu-isolation-operator.labels" . | nindent 4 }}
+    {{- if .Values.defaultPolicy.active }}
+    platform.example.com/active: "true"
+    {{- end }}
+spec:
+  {{- toYaml .Values.defaultPolicy.spec | nindent 2 }}
+{{- end }}

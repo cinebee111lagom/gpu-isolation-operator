@@ -1,0 +1,8 @@
+{{- if .Values.namespace.create }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ include "gpu-isolation-operator.namespace" . }}
+  labels:
+    {{- include "gpu-isolation-operator.labels" . | nindent 4 }}
+{{- end }}
